@@ -1,18 +1,15 @@
 from fastapi import FastAPI, Cookie, Header
 from .redis_helper import get_redis_connection
-from .config import PUBLIC_KEY
+from .config import PUBLIC_KEY_PATH
 import jwt
 from typing import Annotated
 
 app = FastAPI()
 
 def get_payload(token: str):
-    if PUBLIC_KEY is None:
-        return None
-    try:
-        return jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"])
-    except Exception as e:
-        return None
+    with open(PUBLIC_KEY_PATH, "r") as f:
+        public_key = f.read()
+        return jwt.decode(token, public_key, algorithms=["RS256"])
 
 def get_user_id(token: str):
     payload = get_payload(token)

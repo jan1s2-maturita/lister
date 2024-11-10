@@ -2,7 +2,7 @@ import os
 
 DEBUG = True
 
-PUBLIC_KEY_PATH = os.environ.get('PUBLIC_KEY_PATH')
+PUBLIC_KEY_PATH = os.environ.get('PUBLIC_KEY_PATH', "public.pem")
 REDIS_HOST = 'redis' if DEBUG else os.environ.get('REDIS_HOST')
 REDIS_PORT = 6379
 REDIS_DB = 0
