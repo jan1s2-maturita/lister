@@ -34,7 +34,7 @@ def list_servers(x_token: Annotated[str, Header()]):
     id = get_user_id(x_token)
     if id is None:
         return {"error": "Invalid token"}
-    return redis.zrange(id, 0, -1)
+    return redis.smembers(id)
 
 @app.get("/{server_id}")
 def get_server(server_id: str, x_token: Annotated[str, Header()]):
@@ -48,6 +48,6 @@ def get_server(server_id: str, x_token: Annotated[str, Header()]):
     if id is None:
         return {"error": "Invalid token"}
     # check if server_id is in zset with user_id as key
-    if not redis.zrank(id, server_id):
+    if not redis.sismember(id, server_id):
         return {"error": "Server not found"}
     return redis.hgetall(server_id)
