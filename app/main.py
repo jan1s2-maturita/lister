@@ -5,6 +5,7 @@ import jwt
 from typing import Annotated
 
 app = FastAPI()
+redis = get_redis_connection()
 
 def get_payload(token: str):
     with open(PUBLIC_KEY_PATH, "r") as f:
@@ -25,7 +26,6 @@ def get_admin(token: str):
 
 @app.get("/")
 def list_servers(x_token: Annotated[str, Header()]):
-    redis = get_redis_connection()
     if redis is None:
         return {"error": "Cannot connect to Redis"}
     # redis contains zset with user_id as key and server_id as value 
@@ -38,7 +38,6 @@ def list_servers(x_token: Annotated[str, Header()]):
 
 @app.get("/{server_id}")
 def get_server(server_id: str, x_token: Annotated[str, Header()]):
-    redis = get_redis_connection()
     if redis is None:
         return {"error": "Cannot connect to Redis"}
     # redis contains hash with server_id as key and server details as value
