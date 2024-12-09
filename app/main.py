@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Cookie, Header
-from .redis_helper import get_redis_connection
-from .config import PUBLIC_KEY_PATH
+from fastapi import FastAPI, Cookie, HTTPException, Header
+from .config import PUBLIC_KEY_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASSWORD
+from .models.redis_helper import RedisConnector
 import jwt
 from typing import Annotated
 
 app = FastAPI()
-redis = get_redis_connection()
+r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
 
 def get_payload(token: str):
     with open(PUBLIC_KEY_PATH, "r") as f:
@@ -26,27 +26,23 @@ def get_admin(token: str):
 
 @app.get("/")
 def list_servers(x_token: Annotated[str, Header()]):
-    if redis is None:
-        return {"error": "Cannot connect to Redis"}
     # redis contains zset with user_id as key and server_id as value 
     # return all server_id for the user
     # token in cookie
-    id = get_user_id(x_token)
-    if id is None:
-        return {"error": "Invalid token"}
-    return redis.smembers(id)
+    user_id = get_user_id(x_token)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return r.get_instance(user_id)
 
 @app.get("/{server_id}")
 def get_server(server_id: str, x_token: Annotated[str, Header()]):
-    if redis is None:
-        return {"error": "Cannot connect to Redis"}
     # redis contains hash with server_id as key and server details as value
     # return server details
     # token in cookie
     id = get_user_id(x_token)
     if id is None:
-        return {"error": "Invalid token"}
+        raise HTTPException(status_code=401, detail="Invalid token")
     # check if server_id is in zset with user_id as key
-    if not redis.sismember(id, server_id):
-        return {"error": "Server not found"}
-    return redis.hgetall(server_id)
+    if not r.is_instance(id, server_id):
+        raise HTTPException(status_code=404, detail="Server not found")
+    return {"status": "ok"}
