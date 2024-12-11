@@ -1,11 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Cookie, HTTPException, Header
 from .config import PUBLIC_KEY_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASSWORD
 from .models.redis_helper import RedisConnector
 import jwt
 from typing import Annotated
 
-app = FastAPI()
-r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
+r: RedisConnector
+@asynccontextmanager
+async def init(app: FastAPI):
+    global r
+    r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
+    yield
+
+app = FastAPI(lifespan=init)
+# r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
 
 def get_payload(token: str):
     with open(PUBLIC_KEY_PATH, "r") as f:
