@@ -1,15 +1,20 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Cookie, HTTPException, Header
-from .config import PUBLIC_KEY_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASSWORD
+
+from .config import PUBLIC_KEY_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 from .models.redis_helper import RedisConnector
+from .models.db_connect import Database
 import jwt
 from typing import Annotated
 
 r: RedisConnector
+db: Database
 @asynccontextmanager
 async def init(app: FastAPI):
     global r
+    global db
     r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
+    db = Database(host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASSWORD, db_name=DB_NAME)
     yield
 
 app = FastAPI(lifespan=init)
@@ -33,6 +38,14 @@ def get_admin(token: str):
     return payload.get("admin")
 
 @app.get("/")
+def list_all():
+    response = {}
+    challenges = db.list_challenges()
+    for challenge in challenges:
+        response[challenge.id] = challenge.name
+    return response
+
+@app.get("/running/")
 def list_servers(x_token: Annotated[str, Header()]):
     # redis contains zset with user_id as key and server_id as value 
     # return all server_id for the user
@@ -42,7 +55,7 @@ def list_servers(x_token: Annotated[str, Header()]):
         raise HTTPException(status_code=401, detail="Invalid token")
     return r.get_instance(user_id)
 
-@app.get("/{server_id}")
+@app.get("/running/{server_id}")
 def get_server(server_id: str, x_token: Annotated[str, Header()]):
     # redis contains hash with server_id as key and server details as value
     # return server details
