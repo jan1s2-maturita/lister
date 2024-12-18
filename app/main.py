@@ -2,8 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Cookie, HTTPException, Header
 
 from .config import PUBLIC_KEY_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-from .models.redis_helper import RedisConnector
-from .models.db_connect import Database
+from .models import Database, RedisConnector
 import jwt
 from typing import Annotated
 
