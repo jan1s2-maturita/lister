@@ -66,3 +66,7 @@ def get_server(server_id: str, x_token: Annotated[str, Header()]):
     if not r.is_instance(id, server_id):
         raise HTTPException(status_code=404, detail="Server not found")
     return {"status": "ok"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
