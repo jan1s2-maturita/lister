@@ -17,7 +17,7 @@ async def init(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=init,
-              root_url="/api/lister")
+              root_path="/api/lister")
 # r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
 
 def get_payload(token: str):
