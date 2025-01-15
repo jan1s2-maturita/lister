@@ -16,7 +16,8 @@ async def init(app: FastAPI):
     db = Database(host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASSWORD, db_name=DB_NAME)
     yield
 
-app = FastAPI(lifespan=init)
+app = FastAPI(lifespan=init,
+              root_url="/api/auth")
 # r = RedisConnector(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, password=REDIS_PASSWORD, user=REDIS_USER)
 
 def get_payload(token: str):
